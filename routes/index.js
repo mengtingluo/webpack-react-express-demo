@@ -23,26 +23,35 @@ if (DEV) {
 
 /* GET home page. */
 router.get('/:file', function (req, res, next) {
-    var fileName = req.params.file[0].toUpperCase() + req.params.file.slice(1),
-        Menu = require(Entries.Menu),
-        Header = require(Entries.Header),
-        Model = require(Entries[fileName]),
-        status = res.locals.webpackStats || {},
-        menuPaths = DEV ? GetFilePath(status, 'Menu') : Source.Menu,
-        headerPaths = DEV ? GetFilePath(status, 'Header') : Source.Header,
-        commonPaths = DEV ? GetFilePath(status, 'Vendor') : Source.Vendor,
-        currentPaths = DEV ? GetFilePath(status, fileName) : Source[fileName],
-        scripts = Array.from(commonPaths.js).concat(Array.from(headerPaths.js)).concat(Array.from(currentPaths.js)),
-        csses = Array.from(menuPaths.css).concat(Array.from(headerPaths.css)).concat(Array.from(currentPaths.css));
-    res.render('index', {
-        dev: DEV,
-        csses: csses,
-        scripts: scripts,
-        title: 'HELLO WORLD',
-        header: ReactDOMServer.renderToString(<Header />),
-        content: ReactDOMServer.renderToString(<Model url={req.url}/>),
-        menu: ReactDOMServer.renderToString(<Menu crtSubMenu={`/${fileName}`}/>)
-    });
+    if (req.headers.host.split(':')[1] != process.env.HTTPSPORT) {
+        res.redirect(url.format({
+            protocol: 'https',
+            hostname: process.env.HOST || 'localhost',
+            port: 443,
+            pathname: process.env.LOGINPATH
+        }));
+    } else {
+        var fileName = req.params.file[0].toUpperCase() + req.params.file.slice(1),
+            Menu = require(Entries.Menu),
+            Header = require(Entries.Header),
+            Model = require(Entries[fileName]),
+            status = res.locals.webpackStats || {},
+            menuPaths = DEV ? GetFilePath(status, 'Menu') : Source.Menu,
+            headerPaths = DEV ? GetFilePath(status, 'Header') : Source.Header,
+            commonPaths = DEV ? GetFilePath(status, 'Vendor') : Source.Vendor,
+            currentPaths = DEV ? GetFilePath(status, fileName) : Source[fileName],
+            scripts = Array.from(commonPaths.js).concat(Array.from(headerPaths.js)).concat(Array.from(currentPaths.js)),
+            csses = Array.from(menuPaths.css).concat(Array.from(headerPaths.css)).concat(Array.from(currentPaths.css));
+        res.render('index', {
+            dev: DEV,
+            csses: csses,
+            scripts: scripts,
+            title: 'HELLO WORLD',
+            header: ReactDOMServer.renderToString(<Header/>),
+            content: ReactDOMServer.renderToString(<Model url={req.url}/>),
+            menu: ReactDOMServer.renderToString(<Menu crtSubMenu={`/${fileName}`}/>)
+        });
+    }
 });
 
 module.exports = router;

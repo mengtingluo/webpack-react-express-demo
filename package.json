@@ -6,7 +6,8 @@
     "start": "node ./bin/www",
     "build": "webpack --config webpack.config.prod.js  --progress",
     "dev-build": "webpack --config webpack.config.dev.js --progress",
-    "dev": "cross-env NODE_ENV=dev PORT=9999 node_modules/.bin/nodemon --ignore public/ --ignore client/ --ignore server/"
+    "dev": "cross-env NODE_ENV=dev PORT=9999 node_modules/.bin/nodemon --ignore public/ --ignore client/ --ignore server/",
+    "push":"git add . && git commit -m '转换成https' && git push"
   },
   "dependencies": {
     "body-parser": "~1.15.1",
