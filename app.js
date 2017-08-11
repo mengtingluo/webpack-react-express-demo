@@ -1,5 +1,6 @@
 require('node-jsx').install(); //enable use jsx in express
 require('./middleware/ignorePlugin').install(); //ignore css
+var compression = require('compression');//开启gzip压缩
 
 var path = require('path');
 var express = require('express');
@@ -11,6 +12,7 @@ var bodyParser = require('body-parser');
 var routes = require('./routes');
 
 var app = express();
+app.use(compression());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -20,6 +22,38 @@ app.set('view engine', 'jade');
 var env = process.env.NODE_ENV || '';
 app.set('env', env);
 app.locals.env = env;
+
+var exposedProperties = ['window', 'navigator', 'document'];
+global.document = jsdom('');
+global.window = document.defaultView;
+Object.keys(document.defaultView).forEach((property) => {
+    if (typeof global[property] === 'undefined') {
+        exposedProperties.push(property);
+        global[property] = document.defaultView[property];
+    }
+});
+
+global.$ = {
+    ajaxSetup: function () {
+    },
+    ajax: function () {
+    }
+};
+global.jQuery = {
+    fn: {
+        extend: function () {
+            return this
+        }
+    }
+};
+
+global.navigator = {
+    userAgent: 'node.js'
+};
+
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
 
 // uncomment after placing your favicon in /public
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
@@ -57,12 +91,21 @@ if (app.get('env') === 'dev') {
   });
 
 } else {
-
-  app.use(express.static(path.join(__dirname, 'public'))); //production use static
-
+    app.use(express.static(path.join(__dirname, 'public'), {
+        'etag': false,
+        'maxAge': 157680000,
+        'setHeaders': (res)=> {
+            res.set({'Expires': new Date('2020-12-12')})
+        }
+    })); //production use static
 }
 
-app.use('/', routes);
+app.use('/', (req, res, next) => {
+    if (/^\/$/.test(req.originalUrl)) {
+        res.redirect('/index')
+    }
+    next()
+}, routes);
 
 
 module.exports = app;

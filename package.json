@@ -7,7 +7,7 @@
     "build": "webpack --config webpack.config.prod.js  --progress",
     "dev-build": "webpack --config webpack.config.dev.js --progress",
     "dev": "cross-env NODE_ENV=dev PORT=9999 node_modules/.bin/nodemon --ignore public/ --ignore client/ --ignore server/",
-    "push":"git add . && git commit -m '转换成https' && git push"
+    "push":"git add . && git commit -m 'webpack1=>2 开启浏览器缓存策略' && git push"
   },
   "dependencies": {
     "body-parser": "~1.15.1",
@@ -19,12 +19,13 @@
     "node-jsx": "^0.13.3",
     "react": "^15.2.1",
     "react-dom": "^15.2.1",
-    "serve-favicon": "~2.3.0"
+    "serve-favicon": "~2.3.0",
+    "webpack-chunk-hash": "^0.4.0"
   },
   "devDependencies": {
     "reload": "^1.0.0",
-    "webpack-dev-middleware": "^1.6.1",
-    "webpack-hot-middleware": "^2.12.1",
+    "webpack-dev-middleware": "1.8.4",
+    "webpack-hot-middleware": "2.13.2",
     "ws": "^1.1.1",
     "babel-core": "^6.10.4",
     "babel-loader": "^6.2.4",
@@ -32,9 +33,9 @@
     "babel-preset-react": "^6.11.1",
     "cross-env": "^1.0.8",
     "css-loader": "^0.23.1",
-    "extract-text-webpack-plugin": "^1.0.1",
+    "extract-text-webpack-plugin": "2.0.0-beta.2",
     "nodemon": "^1.9.2",
     "style-loader": "^0.13.1",
-    "webpack": "^1.13.1"
+    "webpack": "^2.2"
   }
 }

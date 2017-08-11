@@ -4,19 +4,20 @@ var outputPath = path.join(__dirname, 'public', 'assets');
 var filePath = path.join(__dirname, 'server');
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
 var GetFileNamePlugin = require("./middleware/getFileNamePlugin");
-var ParseEntry = require('./middleware/ParsePlugin').parseEntry;
-var Entries = ParseEntry(path.join(__dirname, "source"), {
+var parseEntry = require('./middleware/ParsePlugin').parseEntry;
+var enter = parseEntry(path.join(__dirname, "source"), {
     ignore: ['lib']
 });
 
-module.exports =
-{
+let WebpackChunkHash = require('webpack-chunk-hash');
+var HappyPack = require('happypack');
+
+module.exports = {
     name: 'client',
-    entry: Object.assign({Vendor: ['react', 'react-dom']}, Entries),
+    entry: Object.assign({common: ['react', 'react-dom', 'react-datetime', 'moment']}, enter),
     output: {
         path: outputPath,
-        filename: '[name].[hash].js',
-        publicPath: '/assets'
+        filename: '[name].[chunkhash].js',
     },
     resolve: {
         alias: {
@@ -25,31 +26,53 @@ module.exports =
         }
     },
     module: {
-        loaders: [
-            {
-                test: /\.(js|jsx)?$/,
-                exclude: /node_modules/,
-                loader: "babel",
-                query: {
-                    presets: ['es2015', 'react']
-                }
-            }
-            , {
-                test: /\.(less|css)?$/,
-                loader: ExtractTextPlugin.extract(['css', 'less'])
-            }
-        ]
+        rules: [{
+            test: /\.(js)?$/,
+            exclude: /node_modules/,
+            loader: "babel-loader"
+        }, {
+            test: /\.(less|css)?$/,
+            loader: ExtractTextPlugin.extract({
+                fallbackLoader: "style-loader",
+                loader:'css-loader!less-loader'
+            })
+        }, {
+            test: /\.(png|jpg|jpeg|gif)$/,
+            loader: "url-loader?limit=3000&name=images/[name].[ext]"
+        }, {
+            test: /\.(svg|ttf|eot|svg|woff(\(?2\)?)?)(\?[a-zA-Z_0-9.=&]*)?(#[a-zA-Z_0-9.=&]*)?$/,
+            loader: "file-loader?name=[name].[ext]"
+        }]
     },
     plugins: [
-        new webpack.NoErrorsPlugin(),
-        new ExtractTextPlugin("stylesheets/[name].[hash].css", {
+        new WebpackChunkHash(),
+        new HappyPack({
+            id: 'jsx',
+            threads: 4,
+            loaders: ['babel-loader']
+        }),
+        new webpack.DefinePlugin({
+            'process.env': {
+                'NODE_ENV': JSON.stringify('production')
+            }
+        }),
+        new webpack.optimize.CommonsChunkPlugin({
+            name:"common",
+            filename:"common.[hash].js"
+        }),
+        new webpack.optimize.UglifyJsPlugin({
+            output: {comments: false},
+            compress: {warnings: false}
+        }),//压缩
+        new webpack.NoEmitOnErrorsPlugin(),
+        new ExtractTextPlugin({
+            filename:"[name].[contenthash].css",
             allChunks: true
         }),
-        new webpack.optimize.CommonsChunkPlugin('Vendor', 'Vendor.[hash].js'),
         new GetFileNamePlugin({
             fileName: 'static.prod.json',
             publicPath: 'assets/',
             filePath: filePath
         })
     ]
-}
+};
